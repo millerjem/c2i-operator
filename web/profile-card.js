@@ -34,7 +34,9 @@ export class C2IProfileCard extends HTMLElement {
     form.addEventListener('submit',e=>{e.preventDefault();this.dispatchEvent(new CustomEvent('c2i-request',{bubbles:true,composed:true,detail:{name:c.name,requestUID:c.requestUID,settings:Object.fromEntries(inputs.map(x=>[x.name,x.value]))}}));});
     const details=node('details');details.append(node('summary','Review this plan'));
     const dl=node('dl');for(const [label,value]of Object.entries(c.review||{})){dl.append(node('dt',label),node('dd',typeof value==='object'?JSON.stringify(value):value));}details.append(dl,node('code',c.digest));article.append(details);
-    if(c.actions?.approve){const approve=node('button','Approve reviewed plan');approve.type='button';approve.addEventListener('click',()=>this.dispatchEvent(new CustomEvent('c2i-approve',{bubbles:true,composed:true,detail:{name:c.name,requestUID:c.requestUID,planDigest:c.digest}})));article.append(approve);}
+    if(c.actions?.approve){const approve=node('button','Approve reviewed plan');approve.type='button';
+      form.addEventListener('input',()=>{const dirty=inputs.some((x,i)=>x.value!==String(c.settings[i].value??''));approve.disabled=dirty;approve.textContent=dirty?'Request changed settings first':'Approve reviewed plan';});
+      approve.addEventListener('click',()=>this.dispatchEvent(new CustomEvent('c2i-approve',{bubbles:true,composed:true,detail:{name:c.name,requestUID:c.requestUID,planDigest:c.digest}})));article.append(approve);}
     const href=safeLink(c.vertexURL);if(href){const a=node('a','Review in VerteX');a.href=href;a.target='_blank';a.rel='noopener noreferrer';article.append(a);}
   }
 }

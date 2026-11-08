@@ -110,6 +110,23 @@ class ControllerTests(unittest.TestCase):
     def test_cluster_allowlist(self):
         self.c.allowed_clusters=set()
         self.assertEqual(self.c.reconcile(self.obj,[])['phase'],'Blocked');self.assertEqual(self.v.writes,[])
+    def test_existing_deployment_inputs_preserved(self):
+        self.c.reconcile(self.obj,self.approve())
+        values=self.v.writes[0][2]['profiles'][0]['variables']
+        self.assertEqual({v['name']:v['value'] for v in values},
+                         {'application_replicas':'3','access_value':'must-not-appear'})
+    def test_profile_version_mismatch_blocked(self):
+        self.obj['spec']['profileVersion']='2.0.0'
+        self.assertEqual(self.c.reconcile(self.obj,[])['phase'],'Blocked')
+        self.assertEqual(self.v.writes,[])
+    def test_ready_drift_does_not_reapply(self):
+        s=self.c.reconcile(self.obj,self.approve());self.obj['status']=s
+        self.bindings[0]['variables'][0]['value']='3'
+        self.cluster['status']['spcApply']={'patchAppliedTime':'2099-01-01T00:00:00Z'}
+        self.obj['status']=self.c.reconcile(self.obj,[])
+        self.bindings[0]['variables'][0]['value']='4'
+        self.assertEqual(self.c.reconcile(self.obj,[])['phase'],'Drifted')
+        self.assertEqual(len(self.v.writes),2)
     def test_rejection_wins_over_approval(self):
         approvals=self.approve();rejection=copy.deepcopy(approvals[0]);rejection['spec']['decision']='Reject'
         self.assertEqual(self.c.reconcile(self.obj,approvals+[rejection])['phase'],'Rejected')

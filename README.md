@@ -215,7 +215,7 @@ node --test tests/card.test.mjs
 python3 hooks/reconcile.py --config
 ```
 
-Tests cover approval binding, stale plans, drift, rejection, API timeouts, interrupted submissions, status conflicts, sensitive inputs, and readiness. GitHub Actions also builds the container. Validate against a disposable cluster and your VerteX API version before production use.
+Tests cover approval binding, stale plans, drift, rejection, API timeouts, interrupted submissions, status conflicts, sensitive inputs, and readiness. GitHub Actions also builds the container and runs a disposable kind cluster smoke test for hook startup, card generation, immutable requests, and role separation. Validate against a disposable cluster and your VerteX API version before production use.
 
 ## References
 

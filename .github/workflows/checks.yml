@@ -14,4 +14,15 @@ jobs:
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
       - run: node --test tests/card.test.mjs
-      - run: docker build -t c2i-operator:test .
+      - run: docker build -t c2i-operator:dev .
+      - name: Install kind
+        run: |
+          curl -fsSLo /tmp/kind https://kind.sigs.k8s.io/dl/v0.33.0/kind-linux-amd64
+          chmod +x /tmp/kind
+          sudo mv /tmp/kind /usr/local/bin/kind
+      - run: kind create cluster --name c2i-test --wait 90s
+      - run: kind load docker-image c2i-operator:dev --name c2i-test
+      - run: tests/smoke.sh
+      - name: Show operator logs on failure
+        if: failure()
+        run: kubectl -n c2i-system logs deployment/c2i-operator --tail=100 || true
