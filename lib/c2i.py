@@ -119,7 +119,7 @@ def make_plan(obj, profile, cluster, bindings, endpoint, project):
     published = profile['spec']['published']
     if published.get('type', profile['spec'].get('type')) != 'add-on':
         raise ValueError('Only add-on profiles are supported')
-    if published.get('version') != spec['profileVersion']:
+    if published.get('profileVersion', profile['spec'].get('version')) != spec['profileVersion']:
         raise ValueError('Published profile version does not match the requested version')
     current = attached(cluster, spec['profileUid'])
     if current is None:
@@ -201,7 +201,8 @@ class Controller:
             path = '/v1/spectroclusters/' + spec['clusterUid']
             cluster = self.vertex.call(path)
             bindings = self.vertex.call(path + '/variables')
-            profile = self.vertex.call('/v1/clusterprofiles/' + spec['profileUid'])
+            profile = copy.deepcopy(self.vertex.call('/v1/clusterprofiles/' + spec['profileUid']))
+            profile['spec']['variables'] = self.vertex.call('/v1/clusterprofiles/' + spec['profileUid'] + '/variables')['variables']
             # Never repeat a mutation after a crash or a timeout. Read-only verification continues.
             if status.get('phase') in ('Submitting', 'Applying', 'SubmissionUncertain', 'Ready', 'Drifted'):
                 if status.get('observedGeneration') != meta['generation']:

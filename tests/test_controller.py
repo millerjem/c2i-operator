@@ -16,7 +16,7 @@ def fixture():
            'metadata': {'name': 'app-001', 'uid': 'request-uid', 'generation': 1, 'resourceVersion': '1'},
            'spec': {'clusterUid': CLUSTER, 'profileUid': PROFILE, 'profileVersion': '1.0.0',
                     'settings': {'application_replicas': '3'}}}
-    profile = {'spec': {'published': {'type': 'add-on', 'version': '1.0.0', 'packs': [copy.deepcopy(PACK)]},
+    profile = {'spec': {'version': '1.0.0', 'published': {'type': 'add-on', 'profileVersion': '1.0.0', 'version': 7, 'packs': [copy.deepcopy(PACK)]},
                         'variables': [{'name': 'application_replicas', 'format': 'number'},
                                       {'name': 'access_value', 'isSensitive': True, 'defaultValue': 'must-not-appear'}]}}
     cluster = {'spec': {'clusterProfileTemplates': [{'uid': PROFILE, 'packs': [copy.deepcopy(PACK)]}]},
@@ -46,7 +46,10 @@ class Vertex:
             self.writes.append((path,method,copy.deepcopy(body)))
             if self.fail_write: raise RuntimeError('timeout')
             return {}
-        if path.startswith('/v1/clusterprofiles/'): return self.profile
+        if path.startswith('/v1/clusterprofiles/'):
+            if path.endswith('/variables'): return {'variables': self.profile['spec']['variables']}
+            result=copy.deepcopy(self.profile);result['spec'].pop('variables', None)
+            return result
         if path.endswith('/variables'): return self.bindings
         return self.cluster
 

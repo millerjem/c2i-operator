@@ -183,10 +183,10 @@ Or generate card JSON offline from exported resources:
 
 ```sh
 kubectl -n c2i-system get profilerequest application-config-001 -o json > request.json
-python3 tools/card.py request.json --profile /path/to/exported-profile.json --output card.json
+python3 tools/card.py request.json --profile /path/to/exported-profile.json --variables /path/to/variables.json --output card.json
 ```
 
-Offline generation uses requested values or profile defaults; use the live ConfigMap when you need current deployment inputs. A profile export is needed to generate the editable field list. Do not commit exports containing private profile or application data.
+Offline generation uses requested values or profile defaults; use the live ConfigMap when you need current deployment inputs. Export variable definitions server-side from `GET /v1/clusterprofiles/:uid/variables` as `variables.json`; the profile detail response does not include those definitions. Both profile content and variable definitions are needed for the editable field list. Do not commit exports containing private profile or application data.
 
 ## Failure handling and limits
 

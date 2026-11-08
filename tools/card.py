@@ -10,10 +10,13 @@ from c2i import make_card
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('request', type=Path)
 parser.add_argument('--profile', type=Path, help='VerteX profile JSON, needed to generate settings fields')
+parser.add_argument('--variables', type=Path, help='JSON response from the profile variables API')
 parser.add_argument('--output', type=Path)
 args = parser.parse_args()
 request = json.loads(args.request.read_text())
 profile = json.loads(args.profile.read_text()) if args.profile else None
+if profile and args.variables:
+    profile['spec']['variables'] = json.loads(args.variables.read_text())['variables']
 card = make_card(request, request.get('status', {}), profile)
 result = json.dumps(card, indent=2) + '\n'
 if args.output:
