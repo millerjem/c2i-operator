@@ -1,0 +1,12 @@
+apiVersion: c2i.dev/v1alpha1
+kind: ProfileRequest
+metadata:
+  name: application-config-001
+  namespace: c2i-system
+spec:
+  displayName: Application services
+  clusterUid: REPLACE_WITH_CLUSTER_UID
+  profileUid: REPLACE_WITH_ADDON_PROFILE_UID
+  profileVersion: '1.0.0'
+  settings:
+    application_replicas: '3'

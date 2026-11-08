@@ -1,0 +1,76 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: profilerequests.c2i.dev
+spec:
+  group: c2i.dev
+  scope: Namespaced
+  names:
+    plural: profilerequests
+    singular: profilerequest
+    kind: ProfileRequest
+    shortNames: [c2ipr]
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - {name: Phase, type: string, jsonPath: .status.phase}
+        - {name: Profile, type: string, jsonPath: .spec.profileUid}
+        - {name: Version, type: string, jsonPath: .spec.profileVersion}
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [clusterUid, profileUid, profileVersion]
+              x-kubernetes-validations:
+                - rule: self == oldSelf
+                  message: Requests are immutable. Create a new request for changed settings.
+              properties:
+                displayName: {type: string, maxLength: 120}
+                clusterUid: {type: string, pattern: '^[a-f0-9]{24}$'}
+                profileUid: {type: string, pattern: '^[a-f0-9]{24}$'}
+                profileVersion: {type: string, minLength: 1, maxLength: 80}
+                settings:
+                  type: object
+                  maxProperties: 100
+                  additionalProperties: {type: string, maxLength: 4096}
+            status:
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: profileapprovals.c2i.dev
+spec:
+  group: c2i.dev
+  scope: Namespaced
+  names:
+    plural: profileapprovals
+    singular: profileapproval
+    kind: ProfileApproval
+    shortNames: [c2ipa]
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required: [requestUID, planDigest, decision]
+              x-kubernetes-validations:
+                - rule: self == oldSelf
+                  message: Approval records are immutable.
+              properties:
+                requestUID: {type: string, minLength: 1, maxLength: 80}
+                planDigest: {type: string, pattern: '^[a-f0-9]{64}$'}
+                decision: {type: string, enum: [Approve, Reject]}
+                reason: {type: string, maxLength: 1024}

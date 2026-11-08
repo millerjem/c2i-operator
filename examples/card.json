@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "application-config-001",
+  "requestUID": "fixture-only",
+  "title": "Application services",
+  "profileVersion": "1.0.0",
+  "phase": "PendingApproval",
+  "message": "Fixture preview: review the proposed replica count before approving.",
+  "digest": "fixture-digest-not-valid-for-approval",
+  "settings": [{"name": "application_replicas", "label": "Application replicas", "format": "number", "value": "3", "options": []}],
+  "review": {"clusterUid": "fixture-cluster", "profileUid": "fixture-profile", "requestedSettings": {"application_replicas": "3"}},
+  "vertexURL": "https://console.vertex.spectrocloud.com",
+  "actions": {"request": true, "approve": true}
+}

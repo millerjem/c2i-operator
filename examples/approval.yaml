@@ -1,0 +1,10 @@
+apiVersion: c2i.dev/v1alpha1
+kind: ProfileApproval
+metadata:
+  name: application-config-001-review
+  namespace: c2i-system
+spec:
+  requestUID: REPLACE_WITH_REQUEST_METADATA_UID
+  planDigest: REPLACE_WITH_STATUS_PLAN_DIGEST
+  decision: Approve
+  reason: Reviewed the profile content, target cluster and deployment settings.

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>C2I application integration</title>
+<style>body{margin:0;background:#061a22;color:#e9f2ef;font:16px/1.5 system-ui;padding:40px}main{max-width:700px;margin:auto}h1{font-weight:600}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#102f36;padding:20px}a{color:#f7a365}</style>
+<main>
+  <h1>Profile controls in your application</h1>
+  <p>Fixture preview. Buttons show integration events below; this page does not submit updates.</p>
+  <c2i-profile-card></c2i-profile-card>
+  <h2>Application event</h2>
+  <pre id="event" role="status">Edit the settings or review the approval event.</pre>
+</main>
+<script type="module">
+import '../web/profile-card.js';
+const card=document.querySelector('c2i-profile-card');
+card.card=await fetch('./card.json').then(r=>r.json());
+for(const event of ['c2i-request','c2i-approve'])card.addEventListener(event,e=>{
+  document.querySelector('#event').textContent=JSON.stringify({event:e.type,...e.detail},null,2);
+});
+</script>
+</html>

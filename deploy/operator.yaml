@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: c2i-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: c2i-operator
+  namespace: c2i-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: c2i-operator
+  namespace: c2i-system
+rules:
+  - apiGroups: [c2i.dev]
+    resources: [profilerequests, profileapprovals]
+    verbs: [get, list, watch]
+  - apiGroups: [c2i.dev]
+    resources: [profilerequests/status]
+    verbs: [get, patch]
+  - apiGroups: ['']
+    resources: [configmaps]
+    verbs: [get, create, update]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: c2i-operator
+  namespace: c2i-system
+subjects:
+  - kind: ServiceAccount
+    name: c2i-operator
+    namespace: c2i-system
+roleRef: {apiGroup: rbac.authorization.k8s.io, kind: Role, name: c2i-operator}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: c2i-requester
+  namespace: c2i-system
+rules:
+  - apiGroups: [c2i.dev]
+    resources: [profilerequests]
+    verbs: [get, list, watch, create]
+  - apiGroups: ['']
+    resources: [configmaps]
+    verbs: [get, list]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: c2i-approver
+  namespace: c2i-system
+rules:
+  - apiGroups: [c2i.dev]
+    resources: [profilerequests, profileapprovals]
+    verbs: [get, list, watch]
+  - apiGroups: [c2i.dev]
+    resources: [profileapprovals]
+    verbs: [create]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: c2i-operator
+  namespace: c2i-system
+spec:
+  replicas: 1
+  strategy: {type: Recreate}
+  selector:
+    matchLabels: {app: c2i-operator}
+  template:
+    metadata:
+      labels: {app: c2i-operator}
+    spec:
+      serviceAccountName: c2i-operator
+      containers:
+        - name: operator
+          image: c2i-operator:dev
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: C2I_NAMESPACE
+              valueFrom:
+                fieldRef: {fieldPath: metadata.namespace}
+            - {name: VERTEX_ENDPOINT, value: 'https://console.vertex.spectrocloud.com'}
+            - {name: VERTEX_PROJECT_UID, value: REPLACE_WITH_PROJECT_UID}
+            - {name: C2I_ALLOWED_CLUSTERS, value: REPLACE_WITH_CLUSTER_UID}
+          volumeMounts:
+            - {name: credentials, mountPath: /credentials, readOnly: true}
+          resources:
+            requests: {cpu: 50m, memory: 128Mi}
+            limits: {cpu: 500m, memory: 512Mi}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: {drop: [ALL]}
+          ports:
+            - {name: metrics, containerPort: 9115}
+          readinessProbe:
+            tcpSocket: {port: metrics}
+            initialDelaySeconds: 10
+          livenessProbe:
+            tcpSocket: {port: metrics}
+            initialDelaySeconds: 30
+      volumes:
+        - name: credentials
+          secret: {secretName: c2i-vertex, defaultMode: 256}
